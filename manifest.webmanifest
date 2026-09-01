@@ -1,0 +1,11 @@
+{
+  "name": "Operação 15",
+  "short_name": "Operação 15",
+  "description": "Painel de acompanhamento da Operação 15.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07111c",
+  "theme_color": "#07111c",
+  "lang": "pt-BR",
+  "icons": [{ "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

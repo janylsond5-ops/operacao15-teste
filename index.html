@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#07111c" />
+    <meta name="description" content="Painel de acompanhamento da Operação 15." />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/icon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Operação 15</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-mark" aria-hidden="true"><span>15</span></div>
+        <div>
+          <p class="eyebrow">CENTRO DE OPERAÇÕES</p>
+          <h1>Operação 15</h1>
+        </div>
+        <button class="icon-button" id="notifications-button" aria-label="Ver notificações" title="Notificações">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>
+        </button>
+      </header>
+
+      <main>
+        <section class="screen active" id="command" data-screen="command">
+          <div class="hero-grid">
+            <article class="rank-card panel">
+              <div class="card-label"><span class="status-dot"></span> STATUS OPERACIONAL</div>
+              <div class="rank-line"><span class="rank-icon">◆</span><span>RECRUTA</span></div>
+              <div class="xp-row"><span>XP ATUAL</span><strong>1.240 <small>/ 2.000</small></strong></div>
+              <div class="progress-track"><span style="width: 62%"></span></div>
+              <p class="muted">760 XP para a próxima patente</p>
+            </article>
+            <article class="objective-card panel">
+              <p class="card-label" id="operation-label">OBJETIVO DA MISSÃO</p>
+              <p class="operation-caption" id="operation-caption">SELECIONE A OPERAÇÃO</p>
+              <div class="objective-numbers"><strong id="current-weight">--<span>kg</span></strong><span class="arrow">→</span><strong id="goal-weight">--<span>kg</span></strong></div>
+              <div class="progress-meta"><span id="goal-progress-label">CONFIGURE A MISSÃO</span><strong id="goal-progress">--</strong></div>
+              <div class="progress-track"><span id="goal-progress-bar" style="width: 0%"></span></div>
+            </article>
+          </div>
+
+          <div class="section-heading"><div><p class="eyebrow">PROTOCOLO DIÁRIO</p><h2>Missão de hoje</h2><p class="mission-summary" id="mission-summary">Configure sua operação para receber o protocolo.</p></div><span class="date-badge" id="today-date">--</span></div>
+          <div class="setup-callout" id="setup-callout" hidden><div><p class="card-label">PRONTO PARA COMEÇAR</p><strong id="setup-title">Configure sua missão</strong><p id="setup-description">Defina seu perfil e sua meta para ativar o painel.</p></div><button type="button" id="open-profile">CONFIGURAR</button></div>
+          <div class="mission-grid" id="mission-list" aria-live="polite"></div>
+          <button class="finish-button" id="finish-mission" type="button"><span id="finish-mission-label">ACOMPANHAR PROTOCOLO</span><span aria-hidden="true">→</span></button>
+        </section>
+
+        <section class="screen" id="training" data-screen="training">
+          <div class="page-heading"><p class="eyebrow">PROTOCOLO FÍSICO</p><h2>Treinos</h2><p>Configure sua ficha e organize a sequência de treino.</p></div>
+          <div id="training-content" class="training-content"></div>
+        </section>
+
+        <div class="training-modal hidden" id="training-modal" aria-hidden="true">
+          <div class="training-modal-backdrop" data-close-modal="true"></div>
+          <div class="training-modal-card panel" role="dialog" aria-modal="true" aria-labelledby="training-modal-title">
+            <div class="training-modal-header">
+              <div>
+                <p class="card-label">EDITOR DE EXERCÍCIO</p>
+                <h3 id="training-modal-title">Novo exercício</h3>
+              </div>
+              <button type="button" class="icon-button close-modal" aria-label="Fechar editor">×</button>
+            </div>
+            <form id="exercise-form" class="exercise-form">
+              <input type="hidden" id="exercise-protocol" name="protocol" />
+              <input type="hidden" id="exercise-id" name="id" />
+              <label>Nome do exercício<input id="exercise-name" name="name" type="text" maxlength="80" required /></label>
+              <div class="form-row training-form-row">
+                <label>Séries<input id="exercise-sets" name="sets" type="number" min="1" max="12" required /></label>
+                <label>Repetições<input id="exercise-reps" name="reps" type="number" min="1" max="30" required /></label>
+              </div>
+              <div class="form-row training-form-row">
+                <label>Carga (opcional)<input id="exercise-weight" name="weight" type="text" maxlength="30" placeholder="Ex.: 20 kg" /></label>
+                <label>Descanso (s)<input id="exercise-rest" name="rest" type="number" min="30" max="120" step="15" required /></label>
+              </div>
+              <label>Observações<input id="exercise-notes" name="notes" type="text" maxlength="120" placeholder="Opcional" /></label>
+              <div class="training-rest-options" aria-label="Descansos rápidos">
+                <button type="button" class="quick-rest" data-rest="30">30s</button>
+                <button type="button" class="quick-rest" data-rest="45">45s</button>
+                <button type="button" class="quick-rest" data-rest="60">60s</button>
+                <button type="button" class="quick-rest" data-rest="90">90s</button>
+                <button type="button" class="quick-rest" data-rest="120">120s</button>
+              </div>
+              <div class="training-modal-actions">
+                <button type="button" class="secondary-button" data-close-modal="true">CANCELAR</button>
+                <button type="submit" class="save-profile">SALVAR EXERCÍCIO</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <section class="screen" id="food" data-screen="food">
+          <div class="page-heading"><p class="eyebrow">INTELIGÊNCIA NUTRICIONAL</p><h2>Alimentação</h2><p>Registros simples para manter o curso.</p></div>
+          <article class="nutrition-total panel"><p class="card-label">CONSUMO DO DIA</p><strong>1.320 <small>kcal</small></strong><div class="macro-bars"><span style="width: 72%"></span><span style="width: 48%"></span><span style="width: 61%"></span></div><div class="macro-labels"><span>Proteína <b>86g</b></span><span>Carbo <b>128g</b></span><span>Gordura <b>42g</b></span></div></article>
+          <div class="list-panel panel"><p class="card-label">REGISTROS</p><div class="meal"><span class="meal-time">07:40</span><div><strong>Café da manhã</strong><small>Ovos, pão integral e café</small></div><b>380</b></div><div class="meal"><span class="meal-time">12:30</span><div><strong>Almoço</strong><small>Frango, arroz e salada</small></div><b>640</b></div><button class="add-entry">+ ADICIONAR REGISTRO</button></div>
+        </section>
+
+        <section class="screen" id="progress" data-screen="progress">
+          <div class="page-heading"><p class="eyebrow">RELATÓRIO DE CAMPO</p><h2>Evolução</h2><p>Dados essenciais, sem distrações.</p></div>
+          <article class="weight-card panel"><div><p class="card-label">PESO ATUAL</p><strong>84,6 <small>kg</small></strong><p class="positive">↓ 0,8 kg nos últimos 30 dias</p></div><div class="chart" aria-label="Gráfico de tendência de peso"><i style="height:42%"></i><i style="height:48%"></i><i style="height:50%"></i><i style="height:64%"></i><i style="height:70%"></i><i style="height:83%"></i><i style="height:91%"></i></div></article>
+          <div class="metric-grid"><article class="metric panel"><span>SEQUÊNCIA</span><strong>06 <small>dias</small></strong></article><article class="metric panel"><span>MISSÕES</span><strong>21 <small>concluídas</small></strong></article></div>
+        </section>
+
+        <section class="screen" id="settings" data-screen="settings">
+          <div class="page-heading"><p class="eyebrow">CONTROLE DA OPERAÇÃO</p><h2>Configurações</h2><p>Ajuste os parâmetros da sua missão.</p></div>
+          <div class="settings panel">
+            <details class="profile-settings" open>
+              <summary><span>Perfil operacional</span><b>›</b></summary>
+              <form id="profile-form" class="profile-form" novalidate>
+                <p class="form-intro">Defina os parâmetros essenciais da sua operação.</p>
+                <fieldset class="operation-picker" aria-describedby="profile-feedback">
+                  <legend>Operação do atleta</legend>
+                  <div class="operation-options">
+                    <label class="operation-option" data-operation="phoenix"><input type="radio" name="operation" value="phoenix" required /><span class="operation-symbol">⌁</span><span><strong>Operação Fênix</strong><small>Redução de gordura</small></span></label>
+                    <label class="operation-option" data-operation="titan"><input type="radio" name="operation" value="titan" required /><span class="operation-symbol">◆</span><span><strong>Operação Titã</strong><small>Ganho de massa muscular</small></span></label>
+                    <label class="operation-option" data-operation="equilibrio"><input type="radio" name="operation" value="equilibrio" required /><span class="operation-symbol">◈</span><span><strong>Operação Equilíbrio</strong><small>Recomposição corporal</small></span></label>
+                    <label class="operation-option" data-operation="performance"><input type="radio" name="operation" value="performance" required /><span class="operation-symbol">↗</span><span><strong>Operação Performance</strong><small>Condicionamento</small></span></label>
+                  </div>
+                </fieldset>
+
+                <fieldset class="agent-level-picker" aria-describedby="profile-feedback">
+                  <legend>Nível do agente</legend>
+                  <div class="agent-level-options">
+                    <label class="agent-level-option" data-agent-level="recruta"><input type="radio" name="agentLevel" value="recruta" required /><span><strong>RECRUTA</strong><small>Iniciante</small></span></label>
+                    <label class="agent-level-option" data-agent-level="operador"><input type="radio" name="agentLevel" value="operador" required /><span><strong>OPERADOR</strong><small>Intermediário</small></span></label>
+                    <label class="agent-level-option" data-agent-level="veterano"><input type="radio" name="agentLevel" value="veterano" required /><span><strong>VETERANO</strong><small>Avançado</small></span></label>
+                  </div>
+                </fieldset>
+
+                <fieldset class="training-frequency-picker" aria-describedby="profile-feedback">
+                  <legend>Frequência de treino</legend>
+                  <p class="field-question">Quantos dias por semana você treina?</p>
+                  <div class="training-frequency-options">
+                    <label class="training-frequency-option" data-training-frequency="3"><input type="radio" name="trainingFrequency" value="3" required /><span><strong>3 dias</strong></span></label>
+                    <label class="training-frequency-option" data-training-frequency="4"><input type="radio" name="trainingFrequency" value="4" required /><span><strong>4 dias</strong></span></label>
+                    <label class="training-frequency-option" data-training-frequency="5"><input type="radio" name="trainingFrequency" value="5" required /><span><strong>5 dias</strong></span></label>
+                    <label class="training-frequency-option" data-training-frequency="6"><input type="radio" name="trainingFrequency" value="6" required /><span><strong>6 dias</strong></span></label>
+                  </div>
+                </fieldset>
+
+                <label>Nome do agente<input id="profile-name" name="name" type="text" maxlength="40" placeholder="Ex.: Agente Silva" autocomplete="name" aria-describedby="profile-feedback" required /></label>
+                <div class="form-row">
+                  <label>Peso atual <span class="field-unit">kg</span><input id="profile-current-weight" name="currentWeight" type="number" min="25" max="350" step="0.1" inputmode="decimal" placeholder="84,6" aria-describedby="profile-feedback" required /></label>
+                  <label>Peso-meta <span class="field-unit">kg</span><input id="profile-goal-weight" name="goalWeight" type="number" min="25" max="350" step="0.1" inputmode="decimal" placeholder="70,0" aria-describedby="profile-feedback" required /></label>
+                </div>
+                <label>Início da operação<input id="profile-start-date" name="startDate" type="date" aria-describedby="profile-feedback" required /></label>
+                <p class="form-note">Os dados ficam salvos somente neste dispositivo.</p>
+                <p class="form-feedback" id="profile-feedback" role="alert" aria-live="polite"></p>
+                <button type="submit" class="save-profile">SALVAR PERFIL</button>
+              </form>
+            </details>
+            <button type="button" class="future-setting"><span>Metas da missão</span><b>›</b></button><button type="button" class="future-setting"><span>Notificações</span><b>›</b></button><button type="button" class="future-setting"><span>Aparência</span><b>›</b></button>
+          </div>
+          <p class="version">OPERAÇÃO 15 · V1.0</p>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Navegação principal">
+        <button class="nav-item active" data-target="command"><span>⌂</span><small>Comando</small></button><button class="nav-item" data-target="training"><span>⌁</span><small>Treino</small></button><button class="nav-item" data-target="food"><span>◈</span><small>Alimentação</small></button><button class="nav-item" data-target="progress"><span>⌁</span><small>Evolução</small></button><button class="nav-item" data-target="settings"><span>⚙</span><small>Ajustes</small></button>
+      </nav>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="data.js"></script>
+    <script src="missions.js"></script>
+    <script src="protocol-engine.js"></script>
+    <script src="training-library.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
