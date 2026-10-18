@@ -1,5 +1,5 @@
 const OperationData = (() => {
-  const STORAGE_KEY = 'operacao15.profile.v1';
+  const STORAGE_KEY = Store.SYNC_KEYS.profile;
   const OPERATIONS = ['phoenix', 'titan', 'equilibrio', 'performance'];
   const AGENT_LEVELS = ['recruta', 'operador', 'veterano'];
   const TRAINING_FREQUENCIES = [3, 4, 5, 6];
@@ -20,13 +20,13 @@ const OperationData = (() => {
   }
 
   function getProfile() {
-    try { return normalize(JSON.parse(localStorage.getItem(STORAGE_KEY))); } catch { return null; }
+    return normalize(Store.getJSON(STORAGE_KEY));
   }
 
   function saveProfile(profile) {
     const normalized = normalize(profile);
     if (!normalized) throw new Error('Dados de perfil inválidos.');
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    Store.setJSON(STORAGE_KEY, normalized);
     return normalized;
   }
 
@@ -34,7 +34,7 @@ const OperationData = (() => {
 })();
 
 const TrainingData = (() => {
-  const STORAGE_KEY = 'operacao15.training.v1';
+  const STORAGE_KEY = Store.SYNC_KEYS.training;
   const DAY_OPTIONS = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
   const PROTOCOL_OPTIONS = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo'];
 
@@ -139,17 +139,12 @@ const TrainingData = (() => {
   }
 
   function getTrainingData() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      return normalize(saved);
-    } catch {
-      return normalize(null);
-    }
+    return normalize(Store.getJSON(STORAGE_KEY));
   }
 
   function saveTrainingData(data) {
     const normalized = normalize(data);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    Store.setJSON(STORAGE_KEY, normalized);
     return normalized;
   }
 

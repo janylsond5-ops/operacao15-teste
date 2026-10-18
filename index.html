@@ -152,6 +152,21 @@
                 <button type="submit" class="save-profile">SALVAR PERFIL</button>
               </form>
             </details>
+            <details class="profile-settings cloud-settings">
+              <summary><span>Conta e sincronização</span><b>›</b></summary>
+              <div class="cloud-panel">
+                <p class="form-intro" id="cloud-status" role="status" aria-live="polite">Preparando a sincronização...</p>
+                <p class="form-note" id="cloud-detail"></p>
+                <div class="cloud-actions">
+                  <button type="button" id="cloud-signin" class="cloud-button primary" hidden>ENTRAR COM GOOGLE</button>
+                  <button type="button" id="cloud-signout" class="cloud-button" hidden>SAIR DA CONTA</button>
+                  <button type="button" id="backup-export" class="cloud-button">EXPORTAR BACKUP</button>
+                  <button type="button" id="backup-import" class="cloud-button">IMPORTAR BACKUP</button>
+                  <input type="file" id="backup-file" accept="application/json,.json" hidden />
+                </div>
+                <p class="form-note">O backup é um arquivo .json com todos os seus dados. Guarde uma cópia de tempos em tempos.</p>
+              </div>
+            </details>
             <button type="button" class="future-setting"><span>Metas da missão</span><b>›</b></button><button type="button" class="future-setting"><span>Notificações</span><b>›</b></button><button type="button" class="future-setting"><span>Aparência</span><b>›</b></button>
           </div>
           <p class="version">OPERAÇÃO 15 · V1.0</p>
@@ -163,10 +178,13 @@
       </nav>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="storage.js"></script>
     <script src="data.js"></script>
     <script src="missions.js"></script>
     <script src="protocol-engine.js"></script>
     <script src="training-library.js"></script>
     <script src="app.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="cloud.js" defer></script>
   </body>
 </html>

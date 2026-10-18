@@ -1,16 +1,19 @@
 // Incremente VERSION a cada publicação que altere arquivos do app.
-const VERSION = 'v1-3-2';
+const VERSION = 'v1-4-0';
 const CACHE = `operacao-15-${VERSION}`;
-const FONT_CACHE = 'operacao-15-fonts';
+const EXTERNAL_CACHE = 'operacao-15-external';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
+  './storage.js',
   './data.js',
   './missions.js',
   './protocol-engine.js',
   './training-library.js',
   './app.js',
+  './firebase-config.js',
+  './cloud.js',
   './manifest.webmanifest',
   './assets/icon.svg',
   './assets/icon-192.png',
@@ -18,6 +21,8 @@ const ASSETS = [
   './assets/apple-touch-icon.png'
 ];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+const FIREBASE_SDK_HOST = 'www.gstatic.com';
+const FIREBASE_SDK_PATH = '/firebasejs/';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -26,7 +31,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE && key !== FONT_CACHE).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE && key !== EXTERNAL_CACHE).map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
@@ -60,8 +65,10 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
-  if (FONT_HOSTS.includes(url.hostname)) {
-    event.respondWith(cacheFirst(request, FONT_CACHE));
+  const isFont = FONT_HOSTS.includes(url.hostname);
+  const isFirebaseSdk = url.hostname === FIREBASE_SDK_HOST && url.pathname.startsWith(FIREBASE_SDK_PATH);
+  if (isFont || isFirebaseSdk) {
+    event.respondWith(cacheFirst(request, EXTERNAL_CACHE));
     return;
   }
   if (url.origin === self.location.origin) event.respondWith(staleWhileRevalidate(request));
