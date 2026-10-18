@@ -1,5 +1,5 @@
 const MissionSystem = (() => {
-  const STORAGE_KEY = 'operacao15.daily-missions.v1';
+  const STORAGE_KEY = Store.SYNC_KEYS.missions;
 
   // Catálogo inicial: futuras fontes inteligentes, especiais e sazonais serão agregadas aqui.
   const INITIAL_MISSION_CATALOG = {
@@ -36,21 +36,24 @@ const MissionSystem = (() => {
   }
 
   function readState() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
+    const state = Store.getJSON(STORAGE_KEY);
+    return state && typeof state === 'object' && Array.isArray(state.completedMissionIds) ? state : null;
   }
 
   function saveState(state) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    Store.setJSON(STORAGE_KEY, state);
     return state;
   }
 
-  function createState(operation) {
-    return saveState({ date: todayKey(), operation, completedMissionIds: [], completedAt: null });
+  // Estado novo do dia: só existe em memória até o usuário concluir uma missão.
+  // Ler o contexto não grava nada, para não sobrescrever o progresso de outro aparelho.
+  function freshState(operation) {
+    return { date: todayKey(), operation, completedMissionIds: [], completedAt: null };
   }
 
   function getDailyState(operation) {
     const state = readState();
-    if (!state || state.date !== todayKey() || state.operation !== operation) return createState(operation);
+    if (!state || state.date !== todayKey() || state.operation !== operation) return freshState(operation);
     return state;
   }
 
@@ -89,13 +92,14 @@ const MissionSystem = (() => {
     return { ...getContext(operation), justCompleted };
   }
 
+  // Há protocolo ativo quando já existe progresso salvo hoje para esta operação.
   function hasActiveProtocol(operation) {
     const state = readState();
-    return Boolean(state && state.date === todayKey() && state.operation === operation);
+    return Boolean(state && state.date === todayKey() && state.operation === operation && state.completedMissionIds.length > 0);
   }
 
   function restartForOperation(operation) {
-    return createState(operation);
+    return saveState(freshState(operation));
   }
 
   return { getContext, toggleMission, hasActiveProtocol, restartForOperation };

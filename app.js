@@ -249,23 +249,15 @@ profileForm.addEventListener('submit', (event) => {
   openScreen('command');
 });
 
-const EXECUTION_STORAGE_KEY = 'operacao15.training-execution.v1';
+const EXECUTION_STORAGE_KEY = Store.SYNC_KEYS.execution;
 
 function getExecutionRegistry() {
-  try {
-    const raw = localStorage.getItem(EXECUTION_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
+  const registry = Store.getJSON(EXECUTION_STORAGE_KEY);
+  return registry && typeof registry === 'object' && !Array.isArray(registry) ? registry : {};
 }
 
 function setExecutionRegistry(registry) {
-  try {
-    localStorage.setItem(EXECUTION_STORAGE_KEY, JSON.stringify(registry));
-  } catch {
-    // ignora falha de persistência local
-  }
+  Store.setJSON(EXECUTION_STORAGE_KEY, registry);
 }
 
 function getExecutionProfileKey(profile) {
@@ -641,5 +633,135 @@ renderTraining();
 if (window.ProtocolEngine && initialProfile) {
   window.ProtocolEngine.generateProtocol(initialProfile);
 }
+
+// ---- Atualização geral da interface (usada pela nuvem e pelo backup) ----
+function refreshAll() {
+  const profile = OperationData.getProfile();
+  renderProfile(profile);
+  renderMissions(profile);
+  renderTraining();
+}
+
+let refreshPending = false;
+
+function isEditingField() {
+  const active = document.activeElement;
+  return Boolean(active && active.closest && active.closest('#training-content, #profile-form') && /^(INPUT|SELECT|TEXTAREA)$/.test(active.tagName));
+}
+
+window.addEventListener('operacao15:data-changed', () => {
+  if (isEditingField()) {
+    refreshPending = true;
+    return;
+  }
+  refreshAll();
+});
+
+document.addEventListener('focusout', () => {
+  if (!refreshPending) return;
+  setTimeout(() => {
+    if (isEditingField()) return;
+    refreshPending = false;
+    refreshAll();
+  }, 0);
+});
+
+window.addEventListener('operacao15:storage-error', () => {
+  showToast('Não foi possível salvar neste aparelho. O armazenamento pode estar cheio ou bloqueado.', 'warning');
+});
+
+// ---- Conta e sincronização ----
+const cloudStatusEl = document.querySelector('#cloud-status');
+const cloudDetailEl = document.querySelector('#cloud-detail');
+const cloudSignInButton = document.querySelector('#cloud-signin');
+const cloudSignOutButton = document.querySelector('#cloud-signout');
+let lastCloudStatus = null;
+let signInRequested = false;
+
+function formatClock(timestamp) {
+  return new Date(timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderCloudState(state) {
+  const status = state && state.status ? state.status : 'loading';
+  const hasAccount = Boolean(state && state.email);
+  const messages = {
+    disabled: 'Sincronização desativada: o Firebase não está configurado. Os dados ficam só neste aparelho.',
+    loading: 'Preparando a sincronização...',
+    unavailable: 'Sincronização indisponível agora (sem conexão ou bloqueada). Seus dados continuam salvos neste aparelho.',
+    'signed-out': 'Os dados estão salvos só neste aparelho. Entre com o Google para sincronizar com a nuvem.',
+    syncing: 'Sincronizando...',
+    'signed-in': 'Sincronização ativa. Os dados são guardados na sua conta e aparecem em todos os seus aparelhos.',
+    error: (state && state.message) || 'Erro de sincronização.'
+  };
+  cloudStatusEl.textContent = messages[status] || messages.loading;
+  cloudDetailEl.textContent = hasAccount
+    ? `Conta: ${state.email}${state.lastSync && status === 'signed-in' ? ` · última sincronização às ${formatClock(state.lastSync)}` : ''}`
+    : '';
+  cloudSignInButton.hidden = hasAccount || !['signed-out', 'error'].includes(status);
+  cloudSignOutButton.hidden = !hasAccount;
+
+  if (status === 'signed-in' && signInRequested) {
+    signInRequested = false;
+    showToast('Conectado. Dados sincronizados.', 'success');
+  }
+  if (status === 'error' && lastCloudStatus !== 'error' && state.message) {
+    signInRequested = false;
+    showToast(state.message, 'warning');
+  }
+  lastCloudStatus = status;
+}
+
+window.addEventListener('operacao15:cloud-state', (event) => renderCloudState(event.detail));
+renderCloudState(window.CloudSync ? window.CloudSync.getState() : { status: 'loading' });
+
+cloudSignInButton.addEventListener('click', () => {
+  if (!window.CloudSync) return showToast('A sincronização ainda não está disponível.', 'warning');
+  signInRequested = true;
+  setTimeout(() => { signInRequested = false; }, 60000);
+  window.CloudSync.signIn();
+});
+
+cloudSignOutButton.addEventListener('click', () => {
+  if (!window.CloudSync) return;
+  if (window.confirm('Sair da conta? Os dados continuam salvos neste aparelho, mas deixam de sincronizar até você entrar de novo. Se entrar depois com outra conta Google, os dados deste aparelho serão substituídos pelos dessa conta.')) window.CloudSync.signOut();
+});
+
+// ---- Backup em arquivo ----
+document.querySelector('#backup-export').addEventListener('click', () => {
+  const payload = Store.exportBackup();
+  if (!Object.keys(payload.data).length) return showToast('Ainda não há dados para exportar.', 'warning');
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `operacao15-backup-${new Date().toLocaleDateString('sv-SE')}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Backup exportado.', 'success');
+});
+
+const backupFileInput = document.querySelector('#backup-file');
+document.querySelector('#backup-import').addEventListener('click', () => backupFileInput.click());
+backupFileInput.addEventListener('change', async () => {
+  const file = backupFileInput.files && backupFileInput.files[0];
+  backupFileInput.value = '';
+  if (!file) return;
+  let payload;
+  try {
+    payload = JSON.parse(await file.text());
+  } catch {
+    return showToast('Não foi possível ler o arquivo. Escolha um backup .json da Operação 15.', 'warning');
+  }
+  const check = Store.validateBackup(payload);
+  if (!check.ok) return showToast(check.error, 'warning');
+  if (!window.confirm('Importar este backup substitui os dados atuais deste aparelho (e da nuvem, se estiver conectado). Deseja continuar?')) return;
+  const result = Store.importBackup(payload);
+  if (!result.ok) return showToast(result.error, 'warning');
+  refreshAll();
+  showToast('Backup importado.', 'success');
+});
 
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
