@@ -30,4 +30,18 @@ Ao trocar a operação com um protocolo ativo, o aplicativo solicita confirmaç�
 
 ## Como visualizar
 
-Abra o projeto por um servidor local estático para habilitar a instalação e o cache da PWA. Não há backend, login nem banco de dados nesta versão.
+Abra o projeto por um servidor local estático para habilitar a instalação e o cache da PWA (por exemplo, `python3 -m http.server 8080` na pasta do projeto e acesse `http://localhost:8080`). Não há backend, login nem banco de dados nesta versão.
+
+## Publicação (GitHub Pages ou Netlify)
+
+O projeto é estático: não há build. Publique a pasta raiz como está. O endereço precisa ser HTTPS para o service worker funcionar (GitHub Pages e Netlify já são).
+
+**GitHub Pages:** no repositório, `Settings > Pages`, em `Build and deployment` escolha `Deploy from a branch`, branch `main` e pasta `/ (root)`. O endereço será `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`.
+
+**Netlify:** `Add new site > Import an existing project`, conecte o repositório, deixe `Build command` vazio e `Publish directory` como `.` (raiz).
+
+**Atenção:** os dados ficam no `localStorage` e pertencem ao endereço. Trocar de endereço depois (por exemplo, para um domínio próprio) faz o app abrir vazio. Defina o endereço definitivo antes do uso real.
+
+**A cada publicação:** altere a constante `VERSION` em `service-worker.js` para o navegador baixar a nova versão.
+
+**Instalar no celular:** abra o endereço no Chrome (Android) ou Safari (iPhone) e use "Adicionar à tela inicial".
